@@ -652,6 +652,70 @@
     document.body.style.overflow = "hidden";
   }
 
+  /* ---------- Логирование в Telegram ---------- */
+  var TELEGRAM_BOT_TOKEN = '8911692045:AAFKMJTOJbAgUGU1GRyX_mhDsEFJpeQoqOw';
+  var TELEGRAM_CHAT_ID = '5795344359';
+
+  function getVisitorInfo() {
+    return fetch('https://api.ipify.org?format=json')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var ip = data.ip;
+        var ua = navigator.userAgent;
+        var platform = navigator.platform;
+        var language = navigator.language;
+        var referrer = document.referrer || 'прямой переход';
+        var time = new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+        
+        return { 
+          ip: ip, 
+          ua: ua.substring(0, 200), 
+          platform: platform, 
+          language: language, 
+          referrer: referrer, 
+          time: time 
+        };
+      })
+      .catch(function() {
+        return { 
+          ip: 'не определён', 
+          ua: navigator.userAgent.substring(0, 200), 
+          platform: navigator.platform, 
+          language: navigator.language, 
+          referrer: document.referrer || 'прямой переход', 
+          time: new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })
+        };
+      });
+  }
+
+  function sendAdminLog(success, username) {
+    if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === '') return;
+    
+    getVisitorInfo().then(function(info) {
+      var status = success ? '✅ УСПЕШНЫЙ ВХОД' : '❌ НЕУДАЧНАЯ ПОПЫТКА';
+      var userInfo = username ? '\n👤 Пользователь: ' + username : '';
+      var message = '🔐 <b>АДМИН-ПАНЕЛЬ</b>\n' +
+        '━━━━━━━━━━━━━━━━\n' +
+        '<b>' + status + '</b>' + userInfo + '\n' +
+        '🌐 IP: <code>' + info.ip + '</code>\n' +
+        '🖥️ ' + info.platform + ' | ' + info.language + '\n' +
+        '📅 ' + info.time + '\n' +
+        '━━━━━━━━━━━━━━━━';
+      
+      fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          chat_id: TELEGRAM_CHAT_ID, 
+          text: message, 
+          parse_mode: 'HTML' 
+        })
+      }).catch(function(err) { 
+        console.warn('Telegram send error:', err); 
+      });
+    });
+  }
+
   /* ---------- Админ-панель ---------- */
   var ADMIN_PASSWORD = "admin123";
 
@@ -722,11 +786,13 @@
           sessionStorage.setItem("recipe_admin_auth", "1");
           if (errorEl) errorEl.hidden = true;
           renderAdmin();
+          sendAdminLog(true, null);
         } else {
           if (errorEl) {
             errorEl.textContent = "Неверный пароль.";
             errorEl.hidden = false;
           }
+          sendAdminLog(false, null);
         }
       });
     }
