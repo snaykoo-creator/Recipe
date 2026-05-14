@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Панель администратора — рецепт.ру</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="page page--inner page--admin">
+  <header class="site-header">
+    <div class="site-header__inner container">
+      <a class="site-header__logo logo" href="index.html">рецепт<span class="logo__accent">.</span>ру</a>
+      <button class="site-header__burger burger" type="button" aria-label="Открыть меню" aria-expanded="false">
+        <span class="burger__line"></span>
+        <span class="burger__line"></span>
+        <span class="burger__line"></span>
+      </button>
+      <nav class="site-header__nav nav" aria-label="Основное меню">
+        <ul class="nav__list">
+          <li class="nav__item"><a class="nav__link" href="index.html">Главная</a></li>
+          <li class="nav__item"><a class="nav__link" href="recipes.html">Рецепты</a></li>
+          <li class="nav__item"><a class="nav__link" href="registration.html">Регистрация</a></li>
+          <li class="nav__item"><a class="nav__link" href="account.html">Кабинет</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page__main admin-page page__main--admin">
+    <section class="admin-login" id="admin-login">
+      <h1 class="admin-login__title">Вход администратора</h1>
+      <p class="admin-login__hint">Страница <strong>admin.html</strong>. Пароль — в <code class="about__code">ADMIN_ACCESS.txt</code>.</p>
+      <form class="form form--admin" id="form-admin-login" novalidate>
+        <div class="form__row">
+          <label class="form__label" for="admin-password">Пароль</label>
+          <input class="form__input" type="password" id="admin-password" autocomplete="current-password" required>
+        </div>
+        <p class="admin-login__error" id="admin-login-error" hidden></p>
+        <button class="form__submit btn btn--primary" type="submit">Войти</button>
+      </form>
+      <p class="auth-block__footer admin-login__footer">
+        <a class="auth-block__link" href="index.html" target="_blank" rel="noopener noreferrer">Сайт в новой вкладке</a>
+      </p>
+    </section>
+
+    <section class="admin-panel" id="admin-panel" hidden>
+      <div class="admin-panel__head">
+        <h1 class="admin-panel__title">Панель администратора</h1>
+        <button class="btn btn--ghost" type="button" id="admin-logout">Выйти</button>
+      </div>
+
+      <p class="admin-panel__stat">
+        Пользователей: <span class="admin-panel__stat-num" id="admin-user-count">0</span>
+        · рецептов в каталоге: <span class="admin-panel__stat-num" id="admin-recipe-count">8</span>
+      </p>
+
+      <h2 class="admin-panel__subtitle">Объявление на сайте</h2>
+      <p class="admin-panel__hint">Текст показывается под шапкой на всех страницах (кроме этой). После «Сохранить» обновите главную, чтобы увидеть полосу.</p>
+      <form class="form admin-settings" id="form-site-settings">
+        <div class="form__row">
+          <label class="form__label" for="admin-banner-text">Текст объявления</label>
+          <textarea class="form__input admin-settings__textarea" id="admin-banner-text" rows="3" placeholder="Например: сегодня обновили каталог десертов."></textarea>
+        </div>
+        <div class="form__row form__row--checkbox">
+          <label class="form__check">
+            <input class="form__checkbox" type="checkbox" id="admin-banner-on">
+            <span class="form__check-text">Показывать объявление посетителям</span>
+          </label>
+        </div>
+        <button class="btn btn--primary" type="submit">Сохранить настройки</button>
+        <p class="form__message form__message--ok" id="admin-settings-saved" hidden>Сохранено. Обновите страницы сайта.</p>
+      </form>
+
+      <h2 class="admin-panel__subtitle">Пользователи (localStorage)</h2>
+      <div class="admin-actions">
+        <button class="btn btn--ghost" type="button" id="admin-export-users">Скачать список (JSON)</button>
+        <button class="btn btn--ghost admin-actions__danger" type="button" id="admin-clear-users">Очистить всех</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="admin-users-table">
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Email</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <h2 class="admin-panel__subtitle">Страницы сайта</h2>
+      <ul class="admin-links">
+        <li class="admin-links__item">
+          <a class="admin-links__link" href="index.html" target="_blank" rel="noopener noreferrer">Главная</a>
+          <span class="admin-links__note">index.html</span>
+        </li>
+        <li class="admin-links__item">
+          <a class="admin-links__link" href="recipes.html" target="_blank" rel="noopener noreferrer">Рецепты</a>
+          <span class="admin-links__note">recipes.html</span>
+        </li>
+        <li class="admin-links__item">
+          <a class="admin-links__link" href="registration.html" target="_blank" rel="noopener noreferrer">Регистрация</a>
+          <span class="admin-links__note">registration.html</span>
+        </li>
+        <li class="admin-links__item">
+          <a class="admin-links__link" href="account.html" target="_blank" rel="noopener noreferrer">Кабинет</a>
+          <span class="admin-links__note">account.html</span>
+        </li>
+        <li class="admin-links__item">
+          <a class="admin-links__link" href="404.html" target="_blank" rel="noopener noreferrer">404</a>
+          <span class="admin-links__note">404.html</span>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer site-footer--simple">
+    <div class="container site-footer__inner">
+      <p class="site-footer__copy">© 2026 рецепт.ру · админ</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
