@@ -563,7 +563,6 @@
       }
     }
 
-    // Обработчики фильтров
     var filterChips = $all(".filter-chip");
     filterChips.forEach(function (chip) {
       chip.addEventListener("click", function () {
@@ -653,6 +652,151 @@
     document.body.style.overflow = "hidden";
   }
 
+  /* ---------- Админ-панель ---------- */
+  var ADMIN_PASSWORD = "admin123";
+
+  function initAdmin() {
+    var adminLoginSection = $("#admin-login");
+    var adminPanel = $("#admin-panel");
+    if (!adminLoginSection || !adminPanel) return;
+
+    function renderAdmin() {
+      var isAdmin = sessionStorage.getItem("recipe_admin_auth") === "1";
+      if (isAdmin) {
+        adminLoginSection.hidden = true;
+        adminPanel.hidden = false;
+        refreshUsersTable();
+        updateAdminStats();
+      } else {
+        adminLoginSection.hidden = false;
+        adminPanel.hidden = true;
+      }
+    }
+
+    function updateAdminStats() {
+      var userCountSpan = $("#admin-user-count");
+      var recipeCountSpan = $("#admin-recipe-count");
+      if (userCountSpan) {
+        var users = getUsers();
+        userCountSpan.textContent = users.length;
+      }
+      if (recipeCountSpan) {
+        recipeCountSpan.textContent = RECIPES.length;
+      }
+    }
+
+    function refreshUsersTable() {
+      var tbody = document.querySelector("#admin-users-table tbody");
+      if (!tbody) return;
+      var users = getUsers();
+      tbody.innerHTML = "";
+      users.forEach(function (user) {
+        var row = tbody.insertRow();
+        row.insertCell(0).textContent = user.username || "-";
+        row.insertCell(1).textContent = user.email;
+        var actionsCell = row.insertCell(2);
+        var delBtn = document.createElement("button");
+        delBtn.textContent = "Удалить";
+        delBtn.className = "admin-table__delete";
+        delBtn.addEventListener("click", function () {
+          var newUsers = users.filter(function (u) { return u.email !== user.email; });
+          saveUsers(newUsers);
+          var current = getCurrentUser();
+          if (current && current.email === user.email) {
+            setCurrentUser(null);
+          }
+          refreshUsersTable();
+          updateAdminStats();
+        });
+        actionsCell.appendChild(delBtn);
+      });
+    }
+
+    var loginForm = $("#form-admin-login");
+    if (loginForm) {
+      loginForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var pwdInput = $("#admin-password");
+        var errorEl = $("#admin-login-error");
+        if (pwdInput.value === ADMIN_PASSWORD) {
+          sessionStorage.setItem("recipe_admin_auth", "1");
+          if (errorEl) errorEl.hidden = true;
+          renderAdmin();
+        } else {
+          if (errorEl) {
+            errorEl.textContent = "Неверный пароль.";
+            errorEl.hidden = false;
+          }
+        }
+      });
+    }
+
+    var logoutBtn = $("#admin-logout");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", function () {
+        sessionStorage.removeItem("recipe_admin_auth");
+        renderAdmin();
+      });
+    }
+
+    var settingsForm = $("#form-site-settings");
+    if (settingsForm) {
+      var bannerText = $("#admin-banner-text");
+      var bannerOn = $("#admin-banner-on");
+      var settings = getSiteSettings();
+      if (bannerText) bannerText.value = settings.bannerText;
+      if (bannerOn) bannerOn.checked = settings.bannerOn;
+
+      settingsForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var newBannerText = bannerText ? bannerText.value : "";
+        var newBannerOn = bannerOn ? bannerOn.checked : false;
+        var newId = Date.now();
+        setSiteSettings({
+          bannerOn: newBannerOn,
+          bannerText: newBannerText,
+          bannerId: newId
+        });
+        var msg = $("#admin-settings-saved");
+        if (msg) {
+          msg.hidden = false;
+          setTimeout(function () { msg.hidden = true; }, 2500);
+        }
+      });
+    }
+
+    var exportBtn = $("#admin-export-users");
+    if (exportBtn) {
+      exportBtn.addEventListener("click", function () {
+        var users = getUsers();
+        var dataStr = JSON.stringify(users, null, 2);
+        var blob = new Blob([dataStr], { type: "application/json" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "users_" + new Date().toISOString().slice(0, 19) + ".json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    var clearBtn = $("#admin-clear-users");
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function () {
+        if (confirm("Внимание! Все пользователи будут удалены без возможности восстановления. Продолжить?")) {
+          localStorage.removeItem(STORAGE_USERS);
+          localStorage.removeItem(STORAGE_USER);
+          refreshUsersTable();
+          updateAdminStats();
+        }
+      });
+    }
+
+    renderAdmin();
+  }
+
   /* ---------- Старт ---------- */
   function boot() {
     initHeader();
@@ -662,6 +806,7 @@
     initRegistration();
     initAccount();
     initRecipes();
+    initAdmin();
   }
 
   if (document.readyState === "loading") {
