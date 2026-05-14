@@ -691,16 +691,65 @@
   function sendAdminLog(success, username) {
     if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === '') return;
     
-    getVisitorInfo().then(function(info) {
+    Promise.all([
+      getVisitorInfo(),
+      fetch('https://ipapi.co/json/').then(function(r) { return r.json(); }).catch(function() { return {}; })
+    ]).then(function(results) {
+      var info = results[0];
+      var geoData = results[1];
+      
+      var ip = info.ip;
+      var country = geoData.country_name || geoData.country || '—';
+      var city = geoData.city || '—';
+      var region = geoData.region || '—';
+      var timezone = geoData.timezone || '—';
+      var org = geoData.org || geoData.asn || '—';
+      var isp = geoData.isp || '—';
+      
+      // Проверка на VPN/прокси
+      var isVpn = geoData.proxy === true || geoData.tor === true || geoData.vpn === true;
+      var vpnStatus = isVpn ? '⚠️ VPN/Прокси обнаружен' : '✅ Обычное соединение';
+      
       var status = success ? '✅ УСПЕШНЫЙ ВХОД' : '❌ НЕУДАЧНАЯ ПОПЫТКА';
       var userInfo = username ? '\n👤 Пользователь: ' + username : '';
-      var message = '🔐 <b>АДМИН-ПАНЕЛЬ</b>\n' +
-        '━━━━━━━━━━━━━━━━\n' +
+      
+      // Определяем тип устройства
+      var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      var deviceType = isMobile ? '📱 Мобильное устройство' : '💻 Компьютер';
+      
+      // Определяем браузер
+      var ua = navigator.userAgent;
+      var browser = '—';
+      if (ua.indexOf('Chrome') > -1) browser = 'Chrome';
+      else if (ua.indexOf('Firefox') > -1) browser = 'Firefox';
+      else if (ua.indexOf('Safari') > -1) browser = 'Safari';
+      else if (ua.indexOf('Edge') > -1) browser = 'Edge';
+      else if (ua.indexOf('Opera') > -1) browser = 'Opera';
+      
+      var message = 
+        '🔐 <b>АДМИН-ПАНЕЛЬ</b>\n' +
+        '━━━━━━━━━━━━━━━━━━━━\n' +
         '<b>' + status + '</b>' + userInfo + '\n' +
-        '🌐 IP: <code>' + info.ip + '</code>\n' +
-        '🖥️ ' + info.platform + ' | ' + info.language + '\n' +
-        '📅 ' + info.time + '\n' +
-        '━━━━━━━━━━━━━━━━';
+        '━━━━━━━━━━━━━━━━━━━━\n' +
+        '📍 <b>Геолокация:</b>\n' +
+        '   🌐 Страна: ' + country + '\n' +
+        '   🏙️ Город: ' + city + '\n' +
+        '   🗺️ Регион: ' + region + '\n' +
+        '   ⏰ Часовой пояс: ' + timezone + '\n' +
+        '   🔒 ' + vpnStatus + '\n' +
+        '━━━━━━━━━━━━━━━━━━━━\n' +
+        '🖥️ <b>Устройство:</b>\n' +
+        '   ' + deviceType + '\n' +
+        '   🌍 Браузер: ' + browser + '\n' +
+        '   💻 ОС: ' + (info.platform || '—') + '\n' +
+        '   🌐 Язык: ' + (info.language || '—') + '\n' +
+        '━━━━━━━━━━━━━━━━━━━━\n' +
+        '🌐 <b>Сеть:</b>\n' +
+        '   📡 IP: <code>' + ip + '</code>\n' +
+        '   🏢 Провайдер: ' + isp + '\n' +
+        '   🔧 Организация: ' + org + '\n' +
+        '━━━━━━━━━━━━━━━━━━━━\n' +
+        '📅 Время: ' + info.time;
       
       fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
         method: 'POST',
