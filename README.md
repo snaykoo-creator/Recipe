@@ -1,3 +1,8 @@
+## Макет (Figma)
+  
+[Открыть макет](https://www.figma.com/design/tqCnvAeRtAKN1mcAK574Ul/Untitled?node-id=0-1&t=7vjcjT3QtAf5ExUB-1)
+
+
 # рецепт.ру — кулинарный портал
 
 ## Функциональность
